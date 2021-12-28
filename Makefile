@@ -8,8 +8,8 @@ LD_SCRIPT = TM4C123GH6PM.ld
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld 
 OBJCOPY = arm-none-eabi-objcopy
-RM      = rm -rf
-MKDIR   = @mkdir -p $(@D)
+RM = rm -rf
+MKDIR = @mkdir -p $(@D)
 
 OPT += -O0
 
@@ -21,19 +21,33 @@ CFLAGS += $(OPT)
 #LINKER FLAGS
 LDFLAGS = -T $(LD_SCRIPT) -e Reset_Handler 
 
-all: bin/$(PROJECT).bin
+case1: bin/case1.elf
+case2: bin/case2.elf
+case3: bin/case3.elf
 
 $(OBJ)%.o: src/%.c          
 	$(MKDIR)              
 	$(CC) -o $@ $^ -I$(INC) $(CFLAGS)
 
-bin/$(PROJECT).elf: $(OBJS)      #make contains debug symbols for GNU GDB
+# ********** CASE 1 **********
+# undefined memcpy error if you uncomment lines 12-14 in main
+bin/case1.elf: $(OBJS)
+	$(MKDIR)           
+	$(LD) -o $@ $^ $(LDFLAGS)
+
+# ********** CASE 2 **********
+# no more error for lines 12-14 in main
+bin/case2.elf: $(OBJS)
+	$(MKDIR)           
+	$(LD) -o $@ $^ /usr/arm-none-eabi/lib/libc.a $(LDFLAGS)
+
+# ********** CASE 3 **********
+# no more errors for lines 12-14 in main.
+# use -nostdlib because we're not using crt0
+# use -lc because to reinclude std c functions, namely memcpy
+bin/case3.elf: $(OBJS) 
 	$(MKDIR)           
 	$(CC) -o $@ $^ $(LDFLAGS) -nostdlib -lc
-
-bin/$(PROJECT).bin: bin/$(PROJECT).elf    #debug symbols for GNU GDB stripped by objcopy,finished binary ready for flashing
-	$(OBJCOPY) -O binary $< $@
-
 
 clean:
 	-$(RM) obj
