@@ -167,8 +167,8 @@ extern int _etext;
 extern int _data;
 extern int _edata;
 //.bss,unitialized variables
-extern int _bss;
-extern int _ebss;
+extern int __bss_start__;
+extern int __bss_end__;
 
 /***************************************** END OF FILE *******************************************/
 

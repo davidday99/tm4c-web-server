@@ -22,6 +22,7 @@
   and most importantly the Reset_Handler enabling the TM4C to execute the main program when the <RESET>
   button is pressed on board
 */
+
 #include "startup.h"
 
 // +-----------------------------------------------------------------------------------+
@@ -206,12 +207,11 @@ void Reset_Handler(void)
 
     /* initializing .bss values to zero*/
 
-    for (dest = &_bss; dest < &_ebss;)
+    for (dest = &__bss_start__; dest < &__bss_end__;)
     {
     *dest++ = 0;
     }
 
-    /* your program's main() called */
     main();
 }
 
@@ -221,6 +221,11 @@ void Default_Handler(void)
     {
     //does literally nothing except infinitely loop
     }
+}
+
+void _exit() {
+    while (1)
+        ;
 }
 
 /*****************************************END OF FILE*********************************************/

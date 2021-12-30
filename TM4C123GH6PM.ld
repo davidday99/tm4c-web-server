@@ -47,7 +47,21 @@ SECTIONS
         KEEP(*(.vector_table)) /* vector table defined in startup.c to be included */
         *(.text*)                   /* other code */
         *(.rodata*)                /* constants go here */
+        KEEP(*(.init))
+        KEEP(*(.fini))
         _etext = .;             /* end of .text segment */
+    } > FLASH
+    
+    .ARM.extab :
+    {
+        *(.ARM.extab* .gnu.linkonce.armextab.*)
+    } > FLASH
+
+    .ARM :
+    {
+        __exidx_start = .;
+        *(.ARM.exidx*)
+        __exidx_end = .;
     } > FLASH
 
     /* data, initialized variables, to be copied to RAM upon <RESET> by startup.c */
@@ -61,10 +75,10 @@ SECTIONS
     /* uninitialized data which is initialized to 0 upon <RESET> by startup.c */
     .bss :
     {
-        _bss = .;       /* beginning of .bss segment */
+        __bss_start__ = .;       /* beginning of .bss segment */
         *(.bss*)        /* .bss content goes here */
         *(COMMON)       
-        _ebss = .;      /* end of .bss segment */
+        __bss_end__ = .;      /* end of .bss segment */
     } > RAM
 
     /* Stuff that isn't needed for an embedded system */
