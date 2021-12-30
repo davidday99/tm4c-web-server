@@ -1,4 +1,6 @@
 PROJECT = main
+DEV = /dev/ttyACM0
+FLASHER = lm4flash
 SRCS = $(wildcard src/*.c)
 OBJ = obj/
 OBJS = $(addprefix $(OBJ), $(notdir $(SRCS:.c=.o)))
@@ -7,6 +9,7 @@ LD_SCRIPT = TM4C123GH6PM.ld
 
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld 
+DEBUGGER = arm-none-eabi-gdb
 OBJCOPY = arm-none-eabi-objcopy
 RM = rm -rf
 MKDIR = @mkdir -p $(@D)
@@ -25,6 +28,13 @@ bin/$(PROJECT).elf: $(OBJS)
 	$(MKDIR)           
 	$(CC) -o $@ $^ $(CFLAGS) -Wl,-T $(LD_SCRIPT) -Wl,-e Reset_Handler
 	$(OBJCOPY) -O binary $@ bin/$(PROJECT).bin 
+
+flash:
+	$(FLASHER) -S $(DEV) bin/$(PROJECT).bin
+
+debug:
+	$(DEBUGGER) --tui bin/$(PROJECT).elf -ex "target remote :3333" -ex "monitor reset halt"
+
 
 clean:
 	-$(RM) obj
