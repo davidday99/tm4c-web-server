@@ -19,7 +19,6 @@ CFLAGS += -mfloat-abi=softfp -MD -std=c99 -Wextra -Wall -Wno-missing-braces
 
 all: bin/$(PROJECT).elf
 
-
 $(OBJ)%.o: src/%.c          
 	$(MKDIR)              
 	$(CC) -o $@ $^ -c -I$(INC) $(CFLAGS)
