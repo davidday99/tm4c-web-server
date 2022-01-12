@@ -4,8 +4,12 @@ FLASHER = lm4flash
 SRCS = $(wildcard src/*.c)
 OBJ = obj/
 OBJS = $(addprefix $(OBJ), $(notdir $(SRCS:.c=.o)))
-INC = inc/
+INC = -Iinc/ -Ilib/network-stack/inc/ -Ilib/hal/inc/ 
 LD_SCRIPT = TM4C123GH6PM.ld
+
+
+NETDEPS = $(wildcard lib/network-stack/eobj/*.o)
+HALDEPS = $(wildcard lib/hal/lib/*.o)
 
 CC = arm-none-eabi-gcc
 LD = arm-none-eabi-ld 
@@ -14,17 +18,21 @@ OBJCOPY = arm-none-eabi-objcopy
 RM = rm -rf
 MKDIR = @mkdir -p $(@D)
 
-CFLAGS = -ggdb3 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 
+OPT_LEVEL = -Os
+CFLAGS = -ggdb3 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -nostartfiles -nostdlib
 CFLAGS += -mfloat-abi=softfp -MD -std=c99 -Wextra -Wall -Wno-missing-braces
+CFLAGS += $(OPT_LEVEL)
+
+$(info $(OBJS))
 
 all: bin/$(PROJECT).elf
 
 $(OBJ)%.o: src/%.c          
 	$(MKDIR)              
-	$(CC) -o $@ $^ -c -I$(INC) $(CFLAGS)
-	
-bin/$(PROJECT).elf: $(OBJS) 
-	$(MKDIR)           
+	$(CC) -o $@ $^ -c $(INC) $(CFLAGS)
+
+bin/$(PROJECT).elf: $(OBJS) $(HALDEPS) $(NETDEPS)
+	$(MKDIR)
 	$(CC) -o $@ $^ $(CFLAGS) -Wl,-T $(LD_SCRIPT) -Wl,-e Reset_Handler
 	$(OBJCOPY) -O binary $@ bin/$(PROJECT).bin 
 
@@ -38,3 +46,10 @@ debug:
 clean:
 	-$(RM) obj
 	-$(RM) bin
+	-$(MAKE) clean -C lib/network-stack
+	-$(MAKE) clean -C lib/hal
+
+dependencies:
+	$(MAKE) embedded -C lib/network-stack
+	$(MAKE) library -C lib/hal
+
