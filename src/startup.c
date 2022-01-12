@@ -192,6 +192,8 @@ const vector_table_t vectors[] = {
 // +                Implementations of Interrupt Service Routines                      +
 // +-----------------------------------------------------------------------------------+
 
+#pragma GCC optimize ("O0")
+
 void Reset_Handler(void)
 {
 
@@ -202,14 +204,14 @@ void Reset_Handler(void)
     src = &_etext;
     for (dest = &_data; dest < &_edata;)
     {
-    *dest++ = *src++;
+        *dest++ = *src++;
     }
 
     /* initializing .bss values to zero*/
 
     for (dest = &__bss_start__; dest < &__bss_end__;)
     {
-    *dest++ = 0;
+        *dest++ = 0;
     }
 
     main();
