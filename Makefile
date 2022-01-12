@@ -7,7 +7,6 @@ OBJS = $(addprefix $(OBJ), $(notdir $(SRCS:.c=.o)))
 INC = -Iinc/ -Ilib/network-stack/inc/ -Ilib/hal/inc/ 
 LD_SCRIPT = TM4C123GH6PM.ld
 
-
 NETDEPS = $(wildcard lib/network-stack/eobj/*.o)
 HALDEPS = $(wildcard lib/hal/lib/*.o)
 
@@ -25,7 +24,11 @@ CFLAGS += $(OPT_LEVEL)
 
 $(info $(OBJS))
 
-all: bin/$(PROJECT).elf
+dependencies:
+	$(MAKE) embedded -C lib/network-stack
+	$(MAKE) library -C lib/hal
+
+build: bin/$(PROJECT).elf
 
 $(OBJ)%.o: src/%.c          
 	$(MKDIR)              
@@ -42,14 +45,8 @@ flash:
 debug:
 	$(DEBUGGER) --tui bin/$(PROJECT).elf -ex "target remote :3333" -ex "monitor reset halt"
 
-
 clean:
 	-$(RM) obj
 	-$(RM) bin
 	-$(MAKE) clean -C lib/network-stack
 	-$(MAKE) clean -C lib/hal
-
-dependencies:
-	$(MAKE) embedded -C lib/network-stack
-	$(MAKE) library -C lib/hal
-

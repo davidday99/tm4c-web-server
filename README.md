@@ -1,15 +1,16 @@
-# TM4C Bare Metal Template
-This repo contains boilerplate code for starting a new embedded C project. The current structure uses the traditional *inc/* and *src/* folders and includes a linkerscript for the TM4C123GXL microcontroller. A makefile is also included to build the entire project based on its current structure. As a project grows in complexity, you'll most likely need to make changes to it.
+# TM4C Web Server
 
 ## Included Make Recipes
 
-1. all: default, compiles all the files in *src/*, links them to any standard library functions that may be used and generates both an ELF with debugging symbols and a binary stripped of all symbols to flash to the board.
+1. dependencies: default, generate object files from all included external libraries in *lib*.
 
-2. flash: flash the most recently generated binary.
+2. build: compile the source code specific to this project with all external libraries and generate an ELF (for debugging symbols) and a binary in *bin*.
 
-3. debug: open a gdb debug session, connect to the target device, and reset it.
+3. flash: flash the most recently generated binary.
 
-4. clean: delete the *bin/* and *obj/* directories.
+4. debug: open a gdb debug session, connect to the target device, and reset it.
+
+5. clean: delete the *bin/* and *obj/* directories and call *make clean* in all subdirectory Makefiles.
 
 ## Dependencies
 
