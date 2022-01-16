@@ -6,6 +6,7 @@
 #include "enc28j60.h"
 #include "lcd.h"
 #include "socket.h"
+#include "ipv4.h"
 
 extern void EnableInterrupts();
 extern void DisableInterrupts();
@@ -28,12 +29,12 @@ static uint8_t frame[] = {
     0xEC,
     0x02,
     0xC5,
-    0xDE,
-    0xAD,
-    0xBE,
+    0xA0,
+    0xCD,
     0xEF,
-    0xCC,
-    0xCC,
+    0x01,
+    0x23,
+    0x45,
     0x08,
     0x00,
     0x45,
@@ -51,11 +52,11 @@ static uint8_t frame[] = {
     0xC0,
     0xA8,
     0x00,
-    0x01,
-    0xc0,
-    0xa8,
-    0x00,
     0x6E,
+    0xC0,
+    0xA8,
+    0x00,
+    0x81,
     0x00,
     0x50,
     0x00,
@@ -87,6 +88,8 @@ int main(void){
         lcd_write(&lcd, "Could not init.\n");
     }
 
+    ipv4_set_address(0xC0A8006F);  // set IP address as 192.168.0.111
+
     struct socket *sock = socket_init(SOCKTYPE_UDP);
     struct socket_addr sockaddr = {SOCKADDR_IP_ANY, 5353};
     socket_bind(sock, &sockaddr);
@@ -109,6 +112,5 @@ int main(void){
             data[0] = '\0';
         }
         socket_sendto(sock, &sockaddr, reply, sizeof(reply));
-        // Delay(10);
     }
 }
