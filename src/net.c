@@ -2,6 +2,7 @@
 #include "enc28j60.h"
 #include "ethernet.h"
 #include "ipv4.h"
+#include "arp.h"
 #include "string.h"
 #include "netcommon.h"
 
@@ -14,17 +15,19 @@ void net_rx(uint8_t *buf) {
         case ETHERTYPE_IPV4:
             ipv4_deliver(&buf[ENET_DATA_OFFSET]);
             break;
+        case ETHERTYPE_ARP:
+            arp_deliver(&buf[ENET_DATA_OFFSET]);
         default:
             break;
     }
 }
 
-void net_tx(uint8_t *data, uint16_t len, uint16_t type) {
+void net_tx(uint8_t *destmac, uint8_t *data, uint16_t len, uint16_t type) {
     uint8_t enet_frame[ENET_HEADER_SIZE + len];
     struct enethdr *hdr = (struct enethdr *) enet_frame;
     uint8_t src_mac[6];
     ENC28J60_get_mac_address(&ENC28J60, src_mac);
-    memcpy(hdr->dest, gateway_mac, 6);
+    memcpy(hdr->dest, destmac != 0 ? destmac : gateway_mac, 6);
     memcpy(hdr->src, src_mac, 6);
     memcpy(enet_frame + ENET_HEADER_SIZE, data, len);
     hdr->type = hton16(type);
