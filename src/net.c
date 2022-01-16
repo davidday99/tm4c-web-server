@@ -1,10 +1,23 @@
 #include "net.h"
 #include "enc28j60.h"
 #include "ethernet.h"
+#include "ipv4.h"
 #include "string.h"
 #include "netcommon.h"
 
 uint8_t gateway_mac[] = {0xD8, 0x47, 0x32, 0xFC, 0xFB, 0xF8};
+
+void net_rx(uint8_t *buf) {
+    struct enethdr *hdr = (struct enethdr *) buf;
+
+    switch (hton16(hdr->type)) {
+        case ETHERTYPE_IPV4:
+            ipv4_deliver(&buf[ENET_DATA_OFFSET]);
+            break;
+        default:
+            break;
+    }
+}
 
 void net_tx(uint8_t *data, uint16_t len, uint16_t type) {
     uint8_t enet_frame[ENET_HEADER_SIZE + len];

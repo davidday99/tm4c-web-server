@@ -7,6 +7,7 @@
 #include "timer_module.h"
 #include "enc28j60.h"
 #include "ipv4.h"
+#include "net.h"
 #include "lcd.h"
 
 extern uint8_t ENC28J60_DMA_IN_PROGRESS;
@@ -44,7 +45,7 @@ void SPI1_ISR(void) {
         set_gpio_pin_high(enc->cs);
         ENC28J60_disable_dma(enc);
         disable_ssi_interrupts(enc->ssi);
-        ipv4_deliver(&(enc->rx_buf[15]));
+        net_rx(&(enc->rx_buf[1]));
         ENC28J60_advance_rdptr(enc);
         ENC28J60_enable_interrupts(enc);
     }
