@@ -4,36 +4,34 @@
 #include "common.h"
 #include "tm4c123gh6pm.h"
 #include "dma_module.h"
+#include "timer_module.h"
 #include "enc28j60.h"
-#include "ipv4_in.h"
+#include "ipv4.h"
 #include "lcd.h"
 
 extern uint8_t ENC28J60_DMA_IN_PROGRESS;
 extern LCD lcd;
 extern struct ENC28J60 *enc;
 
-void BusFault_Handler(void) {
-    while (1)
-    {
-        
-    }
-}
-
 void GPIOPortB_ISR(void) {
-    uint8_t pin = get_gpio_port_MIS(PORTB);
-    set_gpio_pin_ICR(PORTB, 1);
-    set_gpio_pin_IM(PORTB, 1, 0);
-        
+    uint8_t pin = get_gpio_masked_interrupt_status(PORTB);
+    mask_gpio_interrupt((&ENC28J60)->intr);
+
     /* Check which pin on PORTB triggered the interrupt. PIN2 is connected to the
         ethernet controller's INT pin.
     */
-    if (pin == 2) {
+    if (pin & 2) {
         ENC28J60_disable_interrupts(&ENC28J60);
-        ENC28J60_decrement_packet_count(&ENC28J60);
-        ENC28J60_read_frame_dma(&ENC28J60);
+        clear_gpio_interrupt((&ENC28J60)->intr);
+        uint8_t requests = ENC28J60_get_interrupt_requests(&ENC28J60);
+        if (requests & 0x40) {
+            set_timer_32_bit_starting_value((&ENC28J60)->timeout_clk, (&ENC28J60)->timeout_clk->start_low);
+            ENC28J60_decrement_packet_count(&ENC28J60);
+            ENC28J60_read_frame_dma(&ENC28J60);
+        }
     }
 
-    set_gpio_pin_IM(PORTB, 1, 1);
+    unmask_gpio_interrupt((&ENC28J60)->intr);
 }
 
 void SPI1_ISR(void) {
@@ -46,8 +44,20 @@ void SPI1_ISR(void) {
         set_gpio_pin_high(enc->cs);
         ENC28J60_disable_dma(enc);
         disable_ssi_interrupts(enc->ssi);
-        ipv4_deliver((struct ipv4hdr *) &(enc->rx_buf[15]));
+        ipv4_deliver(&(enc->rx_buf[15]));
         ENC28J60_advance_rdptr(enc);
         ENC28J60_enable_interrupts(enc);
     }
+}
+
+void Timer0A_ISR(void) {
+    disable_timer_timeout_interrupt((&ENC28J60)->timeout_clk);
+    clear_timer_timeout_interrupt((&ENC28J60)->timeout_clk);
+    lcd_clear(&lcd);
+    lcd_write(&lcd, "ENC TIMEOUT.\n");
+    lcd_write(&lcd, "REBOOTING...\n");
+    ENC28J60_init(&ENC28J60);
+    ENC28J60_enable_receive(&ENC28J60);
+    start_timer((&ENC28J60)->timeout_clk);
+    enable_timer_timeout_interrupt((&ENC28J60)->timeout_clk);
 }
