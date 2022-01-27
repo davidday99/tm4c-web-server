@@ -90,27 +90,31 @@ int main(void){
 
     ipv4_set_address(0xC0A8006F);  // set IP address as 192.168.0.111
 
-    struct socket *sock = socket_init(SOCKTYPE_UDP);
-    struct socket_addr sockaddr = {SOCKADDR_IP_ANY, 5353};
-    socket_bind(sock, &sockaddr);
+    struct socket *sock = socket_init(SOCKTYPE_TCP);
+    struct socket_addr sockaddr = {SOCKADDR_IP_ANY, 8000};
+    socket_bind(sock, 8000);
     uint8_t data[64];
     uint8_t reply[] = "Hello, world!\n";
 
     EnableInterrupts();
 
-    // ENC28J60_write_frame_blocking(&ENC28J60, frame, sizeof(frame));
-
     int i = 0;
     int len;
+
+    socket_accept(sock);
+    lcd_write(&lcd, "conn. established\n");
     while (1) {
-        len = socket_read(sock, &sockaddr, data, 64);
-        if (data[0] != '\0') {
+        len = socket_read(sock, data, 64);
+        if (len == 0) {
+            socket_accept(sock);
+            continue;
+        }
+        if (len > 0) {
             data[len] = '\0';
-            lcd_write(&lcd, "%d SOCK:", i++);
             lcd_write(&lcd, (char *) data);
             lcd_write(&lcd, "\n");
+            socket_send(sock, data, len);
             data[0] = '\0';
         }
-        socket_sendto(sock, &sockaddr, reply, sizeof(reply));
     }
 }
