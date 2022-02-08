@@ -7,6 +7,9 @@
 #include "lcd.h"
 #include "socket.h"
 #include "ipv4.h"
+#include "string.h"
+#include "http1_0.h"
+#include "netcommon.h"
 
 extern void EnableInterrupts();
 extern void DisableInterrupts();
@@ -21,56 +24,6 @@ void Delay(uint32_t d) {
     while (delay > 0)
         delay--;
 }
-
-static uint8_t frame[] = {
-    0xB4,
-    0x2E,
-    0x99,
-    0xEC,
-    0x02,
-    0xC5,
-    0xA0,
-    0xCD,
-    0xEF,
-    0x01,
-    0x23,
-    0x45,
-    0x08,
-    0x00,
-    0x45,
-    0x00, 
-    0x00,
-    0x21,
-    0xFF,
-    0xFF,
-    0x40,
-    0x00,
-    0x40,
-    0x11,
-    0x00,
-    0x00,
-    0xC0,
-    0xA8,
-    0x00,
-    0x6E,
-    0xC0,
-    0xA8,
-    0x00,
-    0x81,
-    0x00,
-    0x50,
-    0x00,
-    0x50,
-    0x00,
-    0x0D,
-    0x00,
-    0x00,
-    'O',
-    'K',
-    'A',
-    'Y',
-    0
-};
 
 int main(void){
 
@@ -91,15 +44,16 @@ int main(void){
     ipv4_set_address(0xC0A8006F);  // set IP address as 192.168.0.111
 
     struct socket *sock = socket_init(SOCKTYPE_TCP);
-    struct socket_addr sockaddr = {SOCKADDR_IP_ANY, 8000};
-    socket_bind(sock, 8000);
+    socket_bind(sock, 80);
     uint8_t data[64];
-    uint8_t reply[] = "Hello, world!\n";
 
     EnableInterrupts();
 
-    int i = 0;
     int len;
+    char buf[100];
+    char ip[16];
+    char *header = "<h1>Hello, world!</h1><p>Your public IP is: ";
+    uint8_t headerlen = strlen(header);
 
     socket_accept(sock);
     lcd_write(&lcd, "conn. established\n");
@@ -113,8 +67,11 @@ int main(void){
             data[len] = '\0';
             lcd_write(&lcd, (char *) data);
             lcd_write(&lcd, "\n");
-            socket_send(sock, data, len);
-            data[0] = '\0';
+            int_to_ipv4(sock->clientaddr.ip, ip);
+            strcpy(buf, header);
+            strcpy(buf + headerlen, ip);
+            strcpy(buf + headerlen + sizeof(ip), ".</p>");
+            http_respond(sock, 200, "http://192.168.1.111/", buf);
         }
     }
 }
