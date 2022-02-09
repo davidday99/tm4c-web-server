@@ -45,33 +45,35 @@ int main(void){
 
     struct socket *sock = socket_init(SOCKTYPE_TCP);
     socket_bind(sock, 80);
-    uint8_t data[64];
+    uint8_t data[2000];
 
     EnableInterrupts();
 
     int len;
     char buf[100];
     char ip[16];
-    char *header = "<h1>Hello, world!</h1><p>Your public IP is: ";
+    char *header = "<h1>Love u honey</h1><p>Your public IP is: ";
     uint8_t headerlen = strlen(header);
 
     socket_accept(sock);
-    lcd_write(&lcd, "conn. established\n");
     while (1) {
-        len = socket_read(sock, data, 64);
+        len = socket_read(sock, data, 1000);
         if (len == 0) {
             socket_accept(sock);
             continue;
         }
         if (len > 0) {
             data[len] = '\0';
-            lcd_write(&lcd, (char *) data);
-            lcd_write(&lcd, "\n");
+            // lcd_write(&lcd, (char *) data);
             int_to_ipv4(sock->clientaddr.ip, ip);
+            lcd_write(&lcd, "Client ");
+            lcd_write(&lcd, ip);
+            lcd_write(&lcd, "\n");
             strcpy(buf, header);
             strcpy(buf + headerlen, ip);
-            strcpy(buf + headerlen + sizeof(ip), ".</p>");
+            strcpy(buf + headerlen + strlen(ip), ".</p>");
             http_respond(sock, 200, "http://192.168.1.111/", buf);
+            // socket_close(sock);
         }
     }
 }
