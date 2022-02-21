@@ -36,7 +36,7 @@ $(OBJ)%.o: src/%.c
 
 bin/$(PROJECT).elf: $(OBJS) $(HALDEPS) $(NETDEPS)
 	$(MKDIR)
-	$(CC) -o $@ $^ $(CFLAGS) -Wl,-T $(LD_SCRIPT) -Wl,-e Reset_Handler
+	$(CC) -o $@ $^ $(CFLAGS) -Wl,-T $(LD_SCRIPT) -Wl,-eReset_Handler
 	$(OBJCOPY) -O binary $@ bin/$(PROJECT).bin 
 
 flash:

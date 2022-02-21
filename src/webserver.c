@@ -1,13 +1,26 @@
 #include <stdint.h>
 #include "webserver.h"
-#include "socket.h"
+#include "endpoint.h"
 #include "http1_0.h"
+#include "socket.h"
 #include "lcd.h"
 #include "string.h"
 
+#define REQUEST_BUF_LEN 2000
+
 static uint8_t WEBSERVER_RUNNING;
 
+extern void index(struct socket *conn, struct http_request_message *req);
+extern void about(struct socket *conn, struct http_request_message *req);
+
+const struct endpoint ENDPOINTS[] = {
+    {.path = "/", .GET = index, .HEAD = 0, .POST = 0},
+    {.path = "/about", .GET = about, .HEAD = 0, .POST = 0},
+};
+
 static void webserver_run(void);
+static void webserver_serve(struct socket *conn, struct http_request_message *req);
+void log_client(struct socket *conn);
 
 static struct socket *client;
 
@@ -29,12 +42,9 @@ void webserver_stop() {
 }
 
 static void webserver_run(void) {
-    uint8_t data[1024];
+    uint8_t data[REQUEST_BUF_LEN];
     uint16_t len = 0;
-    char buf[100];
-    char ip[16];
-    char *header = "<h1>Love u honey</h1><p>Your public IP is: ";
-    uint8_t headerlen = strlen(header);
+    struct http_request_message req;
 
     while (WEBSERVER_RUNNING) {
         // accept client
@@ -42,23 +52,56 @@ static void webserver_run(void) {
             continue;
 
         // read http request
-        len = socket_read(client, data, 1000);
+        len = socket_read(client, data, REQUEST_BUF_LEN);
 
         // serve request
         if (len > 0) {
-            data[len] = '\0';
-            // lcd_write(&lcd, (char *) data);
-            int_to_ipv4(client->clientaddr.ip, ip);
-            lcd_write(&lcd, "Client ");
-            lcd_write(&lcd, ip);
-            lcd_write(&lcd, "\n");
-            strcpy(buf, header);
-            strcpy(buf + headerlen, ip);
-            strcpy(buf + headerlen + strlen(ip), ".</p>");
-            http_respond(client, 200, "http://192.168.1.111/", buf);
+            log_client(client);
+            http_parse_request(data, &req);
+            webserver_serve(client, &req);
         }
 
         // close connection
         socket_close(client);
     }
+}
+
+static void webserver_serve(struct socket *conn, struct http_request_message *req) {
+    const struct endpoint *ep = get_endpoint(req->uri, ENDPOINTS, sizeof(ENDPOINTS));
+    void (*method)() = 0;
+
+    if (ep == 0) {
+        // return 404
+        while (1)
+            ;
+    }
+
+    switch (req->method) {
+        case GET:
+            method = ep->GET;
+            break;
+        case HEAD:
+            method = ep->HEAD;
+            break;
+        case POST:
+            method = ep->POST;
+            break;
+        default:
+            // return unknown method error
+            break;
+    }
+
+    if (method != 0) {
+        method(conn, req);
+    } else {
+        // return method not allowed
+    }
+}
+
+void log_client(struct socket *conn) {
+    char ip[16];
+    int_to_ipv4(conn->clientaddr.ip, ip);
+    lcd_write(&lcd, "Client ");
+    lcd_write(&lcd, ip);
+    lcd_write(&lcd, "\n");
 }
