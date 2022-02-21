@@ -10,6 +10,7 @@
 #include "string.h"
 #include "http1_0.h"
 #include "netcommon.h"
+#include "webserver.h"
 
 extern void EnableInterrupts();
 extern void DisableInterrupts();
@@ -41,39 +42,11 @@ int main(void){
         lcd_write(&lcd, "Could not init.\n");
     }
 
-    ipv4_set_address(0xC0A8006F);  // set IP address as 192.168.0.111
-
-    struct socket *sock = socket_init(SOCKTYPE_TCP);
-    socket_bind(sock, 80);
-    uint8_t data[2000];
+    // ipv4_set_address(0xC0A8006F);  // set IP address as 192.168.0.111
+    ipv4_set_address(ipv4_to_int("192.168.1.150"));
 
     EnableInterrupts();
 
-    int len;
-    char buf[100];
-    char ip[16];
-    char *header = "<h1>Love u honey</h1><p>Your public IP is: ";
-    uint8_t headerlen = strlen(header);
-
-    socket_accept(sock);
-    while (1) {
-        len = socket_read(sock, data, 1000);
-        if (len == 0) {
-            socket_accept(sock);
-            continue;
-        }
-        if (len > 0) {
-            data[len] = '\0';
-            // lcd_write(&lcd, (char *) data);
-            int_to_ipv4(sock->clientaddr.ip, ip);
-            lcd_write(&lcd, "Client ");
-            lcd_write(&lcd, ip);
-            lcd_write(&lcd, "\n");
-            strcpy(buf, header);
-            strcpy(buf + headerlen, ip);
-            strcpy(buf + headerlen + strlen(ip), ".</p>");
-            http_respond(sock, 200, "http://192.168.1.111/", buf);
-            // socket_close(sock);
-        }
-    }
+    webserver_init();
+    webserver_start();
 }
