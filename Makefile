@@ -19,7 +19,7 @@ MKDIR = @mkdir -p $(@D)
 
 OPT_LEVEL = -Os
 CFLAGS = -ggdb3 -mcpu=cortex-m4 -mfpu=fpv4-sp-d16 -nostartfiles -nostdlib
-CFLAGS += -mfloat-abi=softfp -MD -std=c99 -Wextra -Wall -Wno-missing-braces
+CFLAGS += -mfloat-abi=softfp -MD -std=c99 -Wextra -Wall -Wno-missing-braces -Wno-builtin-declaration-mismatch
 CFLAGS += $(OPT_LEVEL)
 
 $(info $(OBJS))
