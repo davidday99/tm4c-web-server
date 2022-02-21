@@ -3,3 +3,5 @@
 - DHCP
 - Handle ethernet frames larger than 1024 bytes (current single DMA transfer limit)
 - Increase timeout time of ENC
+- Investigate endpoint-related fault (probably either a null pointer or a bad URL)
+- Fix TCP module deadlock
