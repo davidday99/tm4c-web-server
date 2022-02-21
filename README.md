@@ -21,4 +21,4 @@ Two Git submodules are included as external libraries for this project:
 - [An incomplete TM4C HAL](https://github.com/davidday99/tm4c-hal)
 - [A toy network stack](https://github.com/davidday99/network-stack)
 
-This project uses the arm-none-eabi toolchain for compilation and debugging. [OpenOCD](https://github.com/openocd-org/openocd.git) is necessary for debugging the remote target, and [lm4flash](https://github.com/utzig/lm4tools.git) is used to flash the board.
+This project uses the arm-none-eabi toolchain for compilation and debugging. [OpenOCD](https://github.com/openocd-org/openocd.git) is necessary for debugging the remote target, and [lm4flash](https://github.com/utzig/lm4tools.git) is used for programming the chip.
