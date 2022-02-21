@@ -10,6 +10,6 @@ struct endpoint {
     void (*POST)();
 };
 
-const struct endpoint *get_endpoint(char *path, struct endpoint epts[], uint8_t eptcount);
+const struct endpoint *get_endpoint(char *path, const struct endpoint epts[], uint8_t eptcount);
 
 #endif /* _ENDPOINT_H_ */
