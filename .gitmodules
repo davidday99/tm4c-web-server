@@ -3,4 +3,4 @@
 	url = git@github.com:davidday99/tm4c-hal.git
 [submodule "lib/network-stack"]
 	path = lib/network-stack
-	url = git@github.com:davidday99/network-stack.git
+	url = git@github.com:davidday99/bare-ns.git
