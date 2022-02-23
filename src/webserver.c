@@ -18,6 +18,8 @@ const struct endpoint ENDPOINTS[] = {
     {.path = "/about", .GET = about, .HEAD = 0, .POST = 0},
 };
 
+#define ENDPOINT_COUNT 2
+
 static void webserver_run(void);
 static void webserver_serve(struct socket *conn, struct http_request_message *req);
 void log_client(struct socket *conn);
@@ -56,9 +58,9 @@ static void webserver_run(void) {
 
         // serve request
         if (len > 0) {
-            log_client(client);
             http_parse_request(data, &req);
             webserver_serve(client, &req);
+            log_client(client);
         }
 
         // close connection
@@ -67,13 +69,14 @@ static void webserver_run(void) {
 }
 
 static void webserver_serve(struct socket *conn, struct http_request_message *req) {
-    const struct endpoint *ep = get_endpoint(req->uri, ENDPOINTS, sizeof(ENDPOINTS));
+    lcd_write(&lcd, req->uri);
+    lcd_write(&lcd, "\n");
+    const struct endpoint *ep = get_endpoint(req->uri, ENDPOINTS, ENDPOINT_COUNT);
     void (*method)() = 0;
 
     if (ep == 0) {
-        // return 404
-        while (1)
-            ;
+        http_respond(conn, 404, "http://192.168.1.150/", "<h1>Error 404</h1><p> Page not found.</p>");
+        return;
     }
 
     switch (req->method) {
@@ -101,7 +104,7 @@ static void webserver_serve(struct socket *conn, struct http_request_message *re
 void log_client(struct socket *conn) {
     char ip[16];
     int_to_ipv4(conn->clientaddr.ip, ip);
-    lcd_write(&lcd, "Client ");
+    lcd_write(&lcd, "Req: ");
     lcd_write(&lcd, ip);
     lcd_write(&lcd, "\n");
 }
