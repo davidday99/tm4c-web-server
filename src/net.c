@@ -35,3 +35,7 @@ void net_tx(uint8_t *destmac, uint8_t *data, uint16_t len, uint16_t type) {
     hdr->type = hton16(type);
     ENC28J60_write_frame_blocking(&ENC28J60, enet_frame, sizeof(enet_frame));
 }
+
+void net_mac_address(uint8_t *mac) {
+    ENC28J60_get_mac_address(&ENC28J60, mac);
+}
