@@ -1,6 +1,6 @@
 # TM4C Web Server
 
-A simple HTTP web server that runs on a TM4C. A very basic custom network stack (see dependencies) implements all *necessary* TCP/IP functionality. That is to say, some of the functionality that any real stack would normally support (e.g., IP packet fragmentation, TCP segment reordering) is not yet implemented.
+A simple single-threaded HTTP web server that runs on a TM4C.
 
 ## Included Make Recipes
 
@@ -22,3 +22,9 @@ Two Git submodules are included as external libraries for this project:
 - [A toy network stack](https://github.com/davidday99/network-stack)
 
 This project uses the arm-none-eabi toolchain for compilation and debugging. [OpenOCD](https://github.com/openocd-org/openocd.git) is necessary for debugging the remote target, and [lm4flash](https://github.com/utzig/lm4tools.git) is used for programming the chip.
+
+## TODO
+- Fix TCP module in network stack so timeout isn't needed for socket connection.
+
+## Versions
+- 1.0.0: stable web server using 2 second timeout for hanging socket connections.
