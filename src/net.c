@@ -6,10 +6,6 @@
 #include "string.h"
 #include "netcommon.h"
 
-
-// uint8_t gateway_mac[] = {0xB4, 0x2E, 0x99, 0xEC, 0x02, 0xC5};
-uint8_t gateway_mac[] = {0xec, 0xc3, 0x02, 0xf1, 0x88, 0xb1};
-
 void net_rx(uint8_t *buf) {
     struct enethdr *hdr = (struct enethdr *) buf;
 
@@ -24,12 +20,12 @@ void net_rx(uint8_t *buf) {
     }
 }
 
-void net_tx(uint8_t *destmac, uint8_t *data, uint16_t len, uint16_t type) {
+void net_tx(const uint8_t *destmac, uint8_t *data, uint16_t len, uint16_t type) {
     uint8_t enet_frame[ENET_HEADER_SIZE + len];
     struct enethdr *hdr = (struct enethdr *) enet_frame;
     uint8_t src_mac[6];
     ENC28J60_get_mac_address(&ENC28J60, src_mac);
-    memcpy(hdr->dest, destmac != 0 ? destmac : gateway_mac, 6);
+    memcpy(hdr->dest, destmac != 0 ? destmac : GATEWAY_MAC, 6);
     memcpy(hdr->src, src_mac, 6);
     memcpy(enet_frame + ENET_HEADER_SIZE, data, len);
     hdr->type = hton16(type);
