@@ -9,10 +9,13 @@
 #include "ipv4.h"
 #include "net.h"
 #include "lcd.h"
+#include "socket.h"
 
-extern uint8_t ENC28J60_DMA_IN_PROGRESS;
 extern LCD lcd;
 extern struct ENC28J60 *enc;
+extern struct TIMER *timeout;
+extern struct socket *client;
+ 
 
 void GPIOPortB_ISR(void) {
     uint8_t pin = get_gpio_masked_interrupt_status(PORTB);
@@ -61,4 +64,11 @@ void Timer0A_ISR(void) {
     ENC28J60_enable_receive(&ENC28J60);
     start_timer((&ENC28J60)->timeout_clk);
     enable_timer_timeout_interrupt((&ENC28J60)->timeout_clk);
+}
+
+void Timer1A_ISR(void) {
+    disable_timer_timeout_interrupt(timeout);
+    clear_timer_timeout_interrupt(timeout);
+    client->tcb.state = CLOSED;
+    enable_timer_timeout_interrupt(timeout);
 }

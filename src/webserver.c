@@ -5,28 +5,30 @@
 #include "socket.h"
 #include "lcd.h"
 #include "string.h"
+#include "timer_module.h"
 
 #define REQUEST_BUF_LEN 2000
+#define ENDPOINT_COUNT 2
+#define CONNECTION_TIMEOUT 160000000
 
 static uint8_t WEBSERVER_RUNNING;
 
-extern void index(struct socket *conn, struct http_request_message *req);
-extern void about(struct socket *conn, struct http_request_message *req);
+void index(struct socket *conn, struct http_request_message *req);
+void about(struct socket *conn, struct http_request_message *req);
+static void webserver_run(void);
+static void webserver_serve(struct socket *conn, struct http_request_message *req);
+void log_client(struct socket *conn);
 
 const struct endpoint ENDPOINTS[] = {
     {.path = "/", .GET = index, .HEAD = 0, .POST = 0},
     {.path = "/about", .GET = about, .HEAD = 0, .POST = 0},
 };
 
-#define ENDPOINT_COUNT 2
-
-static void webserver_run(void);
-static void webserver_serve(struct socket *conn, struct http_request_message *req);
-void log_client(struct socket *conn);
-
-static struct socket *client;
+struct socket *client;
 
 extern LCD lcd;
+
+extern struct TIMER *timeout;
 
 void webserver_init() {
     client = socket_init(SOCKTYPE_TCP);
@@ -50,8 +52,11 @@ static void webserver_run(void) {
 
     while (WEBSERVER_RUNNING) {
         // accept client
-        if (socket_accept(client) == 0)
-            continue;
+        do {
+            set_timer_32_bit_starting_value(timeout, CONNECTION_TIMEOUT);
+            start_timer(timeout);
+        } while (socket_accept(client) == 0);
+        stop_timer(timeout);
 
         // read http request
         len = socket_read(client, data, REQUEST_BUF_LEN);
@@ -102,9 +107,11 @@ static void webserver_serve(struct socket *conn, struct http_request_message *re
 }
 
 void log_client(struct socket *conn) {
+    static uint32_t hits;
     char ip[16];
     int_to_ipv4(conn->clientaddr.ip, ip);
     lcd_write(&lcd, "Req: ");
     lcd_write(&lcd, ip);
     lcd_write(&lcd, "\n");
+    lcd_write(&lcd, "hit %d\n", ++hits);
 }
