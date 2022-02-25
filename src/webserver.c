@@ -10,6 +10,8 @@
 #define REQUEST_BUF_LEN 2000
 #define ENDPOINT_COUNT 2
 #define CONNECTION_TIMEOUT 160000000
+#define REQUEST_TIMEOUT 1600000000
+
 
 static uint8_t WEBSERVER_RUNNING;
 
@@ -46,9 +48,9 @@ void webserver_stop() {
 }
 
 static void webserver_run(void) {
-    uint8_t data[REQUEST_BUF_LEN];
     uint16_t len = 0;
     struct http_request_message req;
+    uint8_t data[REQUEST_BUF_LEN];
 
     while (WEBSERVER_RUNNING) {
         // accept client
@@ -59,8 +61,11 @@ static void webserver_run(void) {
         stop_timer(timeout);
 
         // read http request
+        set_timer_32_bit_starting_value(timeout, REQUEST_TIMEOUT);
+        start_timer(timeout);
         len = socket_read(client, data, REQUEST_BUF_LEN);
-
+        stop_timer(timeout);
+        
         // serve request
         if (len > 0) {
             http_parse_request(data, &req);
@@ -79,8 +84,13 @@ static void webserver_serve(struct socket *conn, struct http_request_message *re
     const struct endpoint *ep = get_endpoint(req->uri, ENDPOINTS, ENDPOINT_COUNT);
     void (*method)() = 0;
 
+    if (req->bad_request) {
+        http_respond(conn, 400, "http://192.168.1.150/", "<h1>Error 400</h1><p>Bad request.</p>");
+        return;
+    }
+
     if (ep == 0) {
-        http_respond(conn, 404, "http://192.168.1.150/", "<h1>Error 404</h1><p> Page not found.</p>");
+        http_respond(conn, 404, "http://192.168.1.150/", "<h1>Error 404</h1><p>Page not found.</p>");
         return;
     }
 
@@ -95,7 +105,7 @@ static void webserver_serve(struct socket *conn, struct http_request_message *re
             method = ep->POST;
             break;
         default:
-            // return unknown method error
+            http_respond(conn, 501, "http://192.168.1.150/", "<h1>Error 501</h1><p>Method not implemented.</p>");
             break;
     }
 
