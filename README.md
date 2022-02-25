@@ -27,4 +27,8 @@ This project uses the arm-none-eabi toolchain for compilation and debugging. [Op
 - Fix TCP module in network stack so timeout isn't needed for socket connection.
 
 ## Versions
-- 1.0.0: stable web server using 2 second timeout for hanging socket connections.
+- 1.0.0
+    - stable web server using 2 second timeout for hanging socket connections.
+- 1.0.1
+    - time out if connected server socket hasn't received data within 20 seconds.
+    - fixed bugs in HTTP library request parser.
