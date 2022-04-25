@@ -32,6 +32,8 @@ This project uses the arm-none-eabi toolchain for compilation. [lm4flash](https:
 - 1.0.1
     - time out if connected server socket hasn't received data within 20 seconds.
     - fixed bugs in HTTP library request parser.
+- 1.0.2
+    - created new linker script.
 
 ## Bugs
 - Occasionally and inconsistently, HTTP response shows content from previous response, e.g., request to a non-existent endpoint returned 404, subsequent homepage request returned another 404. May be an issue with the TCP module.
