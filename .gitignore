@@ -1,5 +1,10 @@
-.vscode/
+# Build files
 obj/
 bin/
 
+# Clang LSP files
+.cache/
+compile_commands.json
 
+# Etc.
+.vscode/
